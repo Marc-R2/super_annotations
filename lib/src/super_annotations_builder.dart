@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/build.dart';
@@ -8,6 +9,7 @@ import 'runner_builder.dart';
 
 class SuperAnnotationsBuilder extends Builder {
   final BuilderOptions options;
+
   SuperAnnotationsBuilder(this.options);
 
   List<String> get targetOptions {
@@ -33,6 +35,7 @@ class SuperAnnotationsBuilder extends Builder {
         ?.toListValue()
         ?.map((o) => o.toStringValue())
         .whereType<String>();
+
     if (targets == null || targets.isEmpty) {
       if (targetOptions.isNotEmpty) {
         targets = [targetOptions.first];
@@ -44,10 +47,27 @@ class SuperAnnotationsBuilder extends Builder {
     for (var target in targets) {
       var outputId = buildStep.inputId.changeExtension('.$target.dart');
       var output = await RunnerBuilder(
-              buildStep, target, codeGenAnnotation, options.config)
-          .run();
+        buildStep,
+        target,
+        codeGenAnnotation,
+        options.config,
+      ).run();
 
-      await buildStep.writeAsString(outputId, DartFormatter().format(output));
+      final newOutput = AssetId(outputId.package, 'test/gen/${outputId.path}');
+
+      final formatted = DartFormatter().format(output);
+
+      // Allow file to be created anywhere
+      final file = File(newOutput.path);
+
+      if (formatted.length <= 3) {
+        if (file.existsSync()) file.deleteSync();
+        return;
+      }
+
+      file.createSync(recursive: true);
+      file.writeAsString(formatted);
+      // await buildStep.writeAsString(newOutput, DartFormatter().format(output));
     }
   }
 
