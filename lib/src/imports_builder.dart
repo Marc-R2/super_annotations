@@ -2,31 +2,30 @@ import 'package:build/build.dart';
 import 'package:path/path.dart' as path;
 
 class ImportsBuilder {
+  ImportsBuilder(this._input);
   final Set<Uri> _imports = {};
   final AssetId _input;
-
-  ImportsBuilder(this._input);
 
   void add(Uri import) => _imports.add(import);
 
   String write() {
     List<String> sdk = [], package = [], relative = [];
 
-    for (var import in _imports) {
+    for (final import in _imports) {
       if (import.isScheme('asset')) {
-        var relativePath =
+        final relativePath =
             path.relative(import.path, from: path.dirname(_input.uri.path));
 
         relative.add(relativePath);
       } else if (import.isScheme('package') &&
           import.pathSegments.first == _input.package) {
-        var libPath =
+        final libPath =
             import.replace(pathSegments: import.pathSegments.skip(1)).path;
 
-        var inputPath = _input.uri
+        final inputPath = _input.uri
             .replace(pathSegments: _input.uri.pathSegments.skip(1))
             .path;
-        var relativePath =
+        final relativePath =
             path.relative(libPath, from: path.dirname(inputPath));
 
         relative.add(relativePath);

@@ -5,7 +5,8 @@ class MyClassAnnotation extends ClassAnnotation {
   @override
   void apply(Class target, LibraryBuilder output) {
     output.body.add(
-        Code('// Class: ${target.name} ${target.fields.map((f) => f.name)}\n'));
+      Code('// Class: ${target.name} ${target.fields.map((f) => f.name)}\n'),
+    );
   }
 }
 
@@ -15,7 +16,8 @@ class MyEnumAnnotation extends EnumAnnotation {
   @override
   void apply(Enum target, LibraryBuilder output) {
     output.body.add(
-        Code('// Enum: ${target.name} ${target.values.map((v) => v.name)}\n'));
+      Code('// Enum: ${target.name} ${target.values.map((v) => v.name)}\n'),
+    );
   }
 }
 
@@ -24,7 +26,10 @@ class MyFunctionAnnotation extends FunctionAnnotation {
 
   @override
   void apply(Method target, LibraryBuilder output) {
-    output.body.add(Code(
-        '// Function: ${target.name} ${target.requiredParameters.map((p) => p.name)}\n'));
+    output.body.add(
+      Code(
+        '// Function: ${target.name} ${target.requiredParameters.map((p) => p.name)}\n',
+      ),
+    );
   }
 }

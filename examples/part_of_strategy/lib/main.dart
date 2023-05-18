@@ -11,6 +11,6 @@ part 'main.g.dart';
 class MyClass with _$MyClass {}
 
 void main() {
-  var v = MyClass();
+  final v = MyClass();
   v.hello();
 }

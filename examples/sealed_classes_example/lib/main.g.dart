@@ -14,6 +14,7 @@ class Data implements Union {
 
   final int value;
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
@@ -25,6 +26,7 @@ class Data implements Union {
 class Loading implements Union {
   const Loading();
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,
@@ -38,6 +40,7 @@ class ErrorDetails implements Union {
 
   final String? message;
 
+  @override
   TResult map<TResult>({
     required TResult Function(Data value) data,
     required TResult Function(Loading value) loading,

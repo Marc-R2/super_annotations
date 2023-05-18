@@ -5,7 +5,7 @@ import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/type_visitor.dart';
 
-import 'imports_builder.dart';
+import 'package:super_annotations/src/imports_builder.dart';
 
 extension EnumCodeBuilder on EnumElement {
   String builder(ImportsBuilder imports, [List<String> writes = const []]) {
@@ -55,7 +55,7 @@ extension FieldCodeBuilder on FieldElement {
       Field((f) => f
         ..name = '${name.escaped}'
         ..type = ${type.builder()}
-        ..modifier = FieldModifier.${isFinal ? 'final\$' : isConst ? 'constant' : 'var\$'}
+        ..modifier = FieldModifier.${isFinal ? r'final$' : isConst ? 'constant' : r'var$'}
         ..static = $isStatic
         ..late = $isLate
         ${metadata.isNotEmpty ? '..annotations.addAll([${metadata.map((m) => m.builder(imports)).join(',')}])' : ''}
@@ -86,8 +86,8 @@ extension ConstructorCodeBuilder on ConstructorElement {
   String builder(ImportsBuilder imports) {
     List<String> reqParams = [], optParams = [];
 
-    var node = getNode() as ConstructorDeclaration?;
-    for (var p in parameters) {
+    final node = getNode() as ConstructorDeclaration?;
+    for (final p in parameters) {
       if (p.isOptional || p.isNamed) {
         optParams.add(p.builder(imports));
       } else {
@@ -111,7 +111,7 @@ extension ConstructorCodeBuilder on ConstructorElement {
 
 extension ParameterCodeBuilder on ParameterElement {
   String builder(ImportsBuilder imports) {
-    var isFieldFormal = this is FieldFormalParameterElement;
+    final isFieldFormal = this is FieldFormalParameterElement;
     return """
       Parameter((p) => p
         ..name = '${name.escaped}'
@@ -192,7 +192,7 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitInterfaceType(InterfaceType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element2.name.escaped}'
+        ..symbol = '${type.element.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
         ${type.typeArguments.isNotEmpty ? '..types.addAll([${type.typeArguments.map((t) => t.builder()).join(', ')}])' : ''}
       )
@@ -208,9 +208,9 @@ class DartTypeVisitor extends TypeVisitor<String> {
   String visitTypeParameterType(TypeParameterType type) {
     return """
       TypeReference((t) => t
-        ..symbol = '${type.element2.name.escaped}'
+        ..symbol = '${type.element.name.escaped}'
         ..isNullable = ${type.nullabilitySuffix == NullabilitySuffix.question}
-        ${!type.bound.isDynamic ? "..bound = ${type.bound.builder()}" : ''}
+        ${type.bound is! DynamicType ? "..bound = ${type.bound.builder()}" : ''}
       )
     """;
   }
@@ -233,12 +233,12 @@ class DartTypeVisitor extends TypeVisitor<String> {
 }
 
 extension StringEscaped on String {
-  String get escaped => replaceAll('\$', '\\\$').replaceAll("'", "\\'");
+  String get escaped => replaceAll(r'$', r'\$').replaceAll("'", r"\'");
 }
 
 extension ElementToNode on Element {
   AstNode? getNode() {
-    var node =
+    final node =
         (session?.getParsedLibraryByElement(library!) as ParsedLibraryResult?)
             ?.getElementDeclaration(this)
             ?.node;

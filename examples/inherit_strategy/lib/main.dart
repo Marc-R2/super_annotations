@@ -15,7 +15,7 @@ class $MyClass {
 }
 
 void main() {
-  var v = MyClass();
+  final v = MyClass();
   v.hello('John'); // prints: Hello John
   v.hello('Anna'); // prints: Hello Anna
 

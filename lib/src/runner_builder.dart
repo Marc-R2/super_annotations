@@ -7,10 +7,9 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
-
-import '../super_annotations.dart';
-import 'code_builder_string.dart';
-import 'imports_builder.dart';
+import 'package:super_annotations/src/code_builder_string.dart';
+import 'package:super_annotations/src/imports_builder.dart';
+import 'package:super_annotations/super_annotations.dart';
 
 const classAnnotationChecker = TypeChecker.fromRuntime(ClassAnnotation);
 const enumAnnotationChecker = TypeChecker.fromRuntime(EnumAnnotation);
@@ -18,49 +17,60 @@ const functionAnnotationChecker = TypeChecker.fromRuntime(FunctionAnnotation);
 const codeGenChecker = TypeChecker.fromRuntime(CodeGen);
 
 class RunnerBuilder {
+  RunnerBuilder(
+    this.buildStep,
+    this.target,
+    this.annotation,
+    this.config,
+  ) : runnerId = buildStep.inputId.changeExtension('.runner.g.dart');
+
   final BuildStep buildStep;
   final String target;
   final DartObject annotation;
   final Map<String, dynamic> config;
 
   final AssetId runnerId;
-  RunnerBuilder(this.buildStep, this.target, this.annotation, this.config)
-      : runnerId = buildStep.inputId.changeExtension('.runner.g.dart');
 
   Future<void> create() async {
-    Map<ClassElement, List<String>> classTargets = {};
-    Map<EnumElement, List<String>> enumTargets = {};
-    Map<FunctionElement, List<String>> functionTargets = {};
+    final classTargets = <ClassElement, List<String>>{};
+    final enumTargets = <EnumElement, List<String>>{};
+    final functionTargets = <FunctionElement, List<String>>{};
 
-    var imports = ImportsBuilder(buildStep.inputId)
+    final imports = ImportsBuilder(buildStep.inputId)
       ..add(Uri.parse('dart:isolate'))
       ..add(Uri.parse('package:super_annotations/super_annotations.dart'));
 
     handleLibrary(LibraryElement library) {
-      classTargets.addAll(inspectElements(
-        library.units.expand((u) => u.classes),
-        classAnnotationChecker,
-        imports,
-      ));
+      classTargets.addAll(
+        inspectElements(
+          library.units.expand((u) => u.classes),
+          classAnnotationChecker,
+          imports,
+        ),
+      );
 
-      enumTargets.addAll(inspectElements(
-        library.units.expand((u) => u.enums2),
-        enumAnnotationChecker,
-        imports,
-      ));
+      enumTargets.addAll(
+        inspectElements(
+          library.units.expand((u) => u.enums),
+          enumAnnotationChecker,
+          imports,
+        ),
+      );
 
-      functionTargets.addAll(inspectElements(
-        library.units.expand((u) => u.functions),
-        functionAnnotationChecker,
-        imports,
-      ));
+      functionTargets.addAll(
+        inspectElements(
+          library.units.expand((u) => u.functions),
+          functionAnnotationChecker,
+          imports,
+        ),
+      );
     }
 
-    var discoveryMode = DiscoveryMode.values[
+    final discoveryMode = DiscoveryMode.values[
         annotation.getField('discoveryMode')!.getField('index')!.toIntValue()!];
 
     if (discoveryMode == DiscoveryMode.recursiveImports) {
-      await for (var library in buildStep.resolver.libraries) {
+      await for (final library in buildStep.resolver.libraries) {
         if (library.isInSdk) continue;
         handleLibrary(library);
       }
@@ -68,16 +78,16 @@ class RunnerBuilder {
       handleLibrary(await buildStep.inputLibrary);
     }
 
-    var runAfter = getHooks(annotation.getField('runAfter'), imports);
-    var runBefore = getHooks(annotation.getField('runBefore'), imports);
+    final runAfter = getHooks(annotation.getField('runAfter'), imports);
+    final runBefore = getHooks(annotation.getField('runBefore'), imports);
 
-    var runAnnotations = [
+    final runAnnotations = [
       ...classTargets.entries.map((e) => e.key.builder(imports, e.value)),
       ...enumTargets.entries.map((e) => e.key.builder(imports, e.value)),
       ...functionTargets.entries.map((e) => e.key.builder(imports, e.value)),
     ];
 
-    var runnerCode = """
+    final runnerCode = """
       ${imports.write()}
       
       void main(List<String> args, SendPort port) {
@@ -93,7 +103,8 @@ class RunnerBuilder {
     """;
 
     await File(runnerId.path).writeAsString(
-        DartFormatter(fixes: [StyleFix.docComments]).format(runnerCode));
+      DartFormatter(fixes: [StyleFix.docComments]).format(runnerCode),
+    );
   }
 
   Map<E, List<String>> inspectElements<E extends Element>(
@@ -101,17 +112,17 @@ class RunnerBuilder {
     TypeChecker checker,
     ImportsBuilder imports,
   ) {
-    Map<E, List<String>> targets = {};
-    for (var elem in elements) {
-      for (var meta in elem.metadata) {
+    final targets = <E, List<String>>{};
+    for (final elem in elements) {
+      for (final meta in elem.metadata) {
         if (meta.element is ConstructorElement) {
-          var parent = (meta.element! as ConstructorElement).enclosingElement3;
+          final parent = (meta.element! as ConstructorElement).enclosingElement;
           if (checker.isAssignableFrom(parent)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
             imports.add(meta.element!.library!.source.uri);
           }
         } else if (meta.element is PropertyAccessorElement) {
-          var type = (meta.element! as PropertyAccessorElement).returnType;
+          final type = (meta.element! as PropertyAccessorElement).returnType;
           if (checker.isAssignableFromType(type)) {
             (targets[elem] ??= []).add(meta.toSource().substring(1));
             imports.add(meta.element!.library!.source.uri);
@@ -124,12 +135,12 @@ class RunnerBuilder {
 
   Iterable<String> getHooks(DartObject? object, ImportsBuilder imports) {
     if (object == null) return [];
-    var hooks = <String>[];
-    for (var o in object.toListValue() ?? <DartObject>[]) {
-      var fn = o.toFunctionValue();
+    final hooks = <String>[];
+    for (final o in object.toListValue() ?? <DartObject>[]) {
+      final fn = o.toFunctionValue();
       if (fn != null) {
-        if (fn.isStatic && fn.enclosingElement3 is ClassElement) {
-          hooks.add('${fn.enclosingElement3.name}.${fn.name}');
+        if (fn.isStatic && fn.enclosingElement is ClassElement) {
+          hooks.add('${fn.enclosingElement.name}.${fn.name}');
         } else {
           hooks.add(fn.name);
         }
@@ -140,9 +151,9 @@ class RunnerBuilder {
   }
 
   Future<String> execute() async {
-    var dataPort = ReceivePort();
+    final dataPort = ReceivePort();
 
-    var resultFuture = dataPort.first;
+    final resultFuture = dataPort.first;
 
     try {
       await Isolate.spawnUri(
@@ -153,16 +164,16 @@ class RunnerBuilder {
         onError: dataPort.sendPort,
       );
     } on IsolateSpawnException catch (e) {
-      var m = 'Unable to spawn isolate: ';
+      const m = 'Unable to spawn isolate: ';
       if (e.message.startsWith(m)) {
-        var message = e.message.substring(m.length);
+        final message = e.message.substring(m.length);
         throw RunnerException(message);
       } else {
         rethrow;
       }
     }
 
-    var result = await resultFuture;
+    final result = await resultFuture;
 
     if (result is String) {
       return result;
@@ -178,7 +189,7 @@ class RunnerBuilder {
 
   Future<String> run() async {
     await create();
-    var result = await execute();
+    final result = await execute();
     if (config['cleanup'] != false) {
       await cleanup();
     }
@@ -187,8 +198,9 @@ class RunnerBuilder {
 }
 
 class RunnerException implements Exception {
-  String message;
   RunnerException(this.message);
+
+  String message;
 
   @override
   String toString() {

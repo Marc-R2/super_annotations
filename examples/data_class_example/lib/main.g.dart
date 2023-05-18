@@ -11,6 +11,7 @@ mixin _$Person {
         name ?? this.name,
         age ?? this.age,
       );
+  @override
   String toString() => 'Person{name: $name, age: $age}';
 }
 mixin _$Animal {
@@ -27,6 +28,7 @@ mixin _$Animal {
         height ?? this.height,
         isMammal: isMammal ?? this.isMammal,
       );
+  @override
   String toString() =>
       'Animal{name: $name, height: $height, isMammal: $isMammal}';
 }

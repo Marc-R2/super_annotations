@@ -2,8 +2,8 @@ part of 'main.dart';
 
 Person _$PersonFromJson(Map<String, dynamic> map) {
   return Person(
-    (map['name'] as String),
-    age: (map['age'] as int),
+    map['name'] as String,
+    age: map['age'] as int,
   );
 }
 

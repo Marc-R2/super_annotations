@@ -15,10 +15,10 @@ class Union with _$Union {
 }
 
 void main() {
-  var data = Union(42);
+  const data = Union(42);
   print(data.runtimeType); // prints: Data
 
-  var error = Union.error('Test');
+  const error = Union.error('Test');
   print(error.runtimeType); // prints: ErrorDetails
 
   handleUnion(data); // prints: Got data with value 42
@@ -26,9 +26,11 @@ void main() {
 }
 
 void handleUnion(Union union) {
-  print(union.map(
-    data: (d) => 'Got data with value ${d.value}',
-    loading: (l) => 'Is loading...',
-    error: (e) => 'An error occurred with message ${e.message}',
-  ));
+  print(
+    union.map(
+      data: (d) => 'Got data with value ${d.value}',
+      loading: (l) => 'Is loading...',
+      error: (e) => 'An error occurred with message ${e.message}',
+    ),
+  );
 }

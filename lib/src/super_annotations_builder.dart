@@ -5,15 +5,14 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 
-import 'runner_builder.dart';
+import 'package:super_annotations/src/runner_builder.dart';
 
 class SuperAnnotationsBuilder extends Builder {
+  SuperAnnotationsBuilder(this.options);
   final BuilderOptions options;
 
-  SuperAnnotationsBuilder(this.options);
-
   List<String> get targetOptions {
-    var targets = options.config['targets'];
+    final targets = options.config['targets'];
     if (targets is List) {
       return targets.cast<String>();
     } else {
@@ -23,7 +22,7 @@ class SuperAnnotationsBuilder extends Builder {
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
-    var codeGenAnnotation =
+    final codeGenAnnotation =
         await getCodeGenAnnotation(buildStep).catchError((_) => null);
 
     if (codeGenAnnotation == null) {
@@ -44,9 +43,9 @@ class SuperAnnotationsBuilder extends Builder {
       }
     }
 
-    for (var target in targets) {
-      var outputId = buildStep.inputId.changeExtension('.$target.dart');
-      var output = await RunnerBuilder(
+    for (final target in targets) {
+      final outputId = buildStep.inputId.changeExtension('.$target.dart');
+      final output = await RunnerBuilder(
         buildStep,
         target,
         codeGenAnnotation,
@@ -66,13 +65,13 @@ class SuperAnnotationsBuilder extends Builder {
       }
 
       file.createSync(recursive: true);
-      file.writeAsString(formatted);
+      await file.writeAsString(formatted);
       // await buildStep.writeAsString(newOutput, DartFormatter().format(output));
     }
   }
 
   Future<DartObject?> getCodeGenAnnotation(BuildStep buildStep) async {
-    var library = await buildStep.inputLibrary;
+    final library = await buildStep.inputLibrary;
     return codeGenChecker.firstAnnotationOf(library);
   }
 

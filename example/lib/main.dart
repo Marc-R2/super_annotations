@@ -13,9 +13,8 @@ import 'package:super_annotations/super_annotations.dart';
 
 @MyAnnotation()
 class MyClass {
-  final String data;
-
   MyClass(this.data);
+  final String data;
 }
 
 /// Second part of the file:
@@ -47,7 +46,7 @@ class MyAnnotation extends ClassAnnotation {
 void addTitleComment(LibraryBuilder output) {
   /// Modify the contents of the library
   /// Example: Add a title comment
-  output.body.add(Code('// Classes annotated with @MyAnnotation:\n'));
+  output.body.add(const Code('// Classes annotated with @MyAnnotation:\n'));
 }
 
 void main() {}

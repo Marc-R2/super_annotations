@@ -37,6 +37,13 @@ abstract class FunctionAnnotation extends SuperAnnotation<Method> {
 typedef CodeGenHook = void Function(LibraryBuilder output);
 
 class CodeGen {
+  const CodeGen({
+    this.runBefore = const [],
+    this.runAfter = const [],
+    this.targets = const [],
+    this.discoveryMode = DiscoveryMode.recursiveImports,
+  });
+
   /// Contains the path to the current source file for the build
   static String currentFile = '';
 
@@ -57,13 +64,6 @@ class CodeGen {
   /// Discovery mode
   final DiscoveryMode discoveryMode;
 
-  const CodeGen({
-    this.runBefore = const [],
-    this.runAfter = const [],
-    this.targets = const [],
-    this.discoveryMode = DiscoveryMode.recursiveImports,
-  });
-
   static void addPartOfDirective(LibraryBuilder library) {
     library.directives.add(Directive.partOf(CodeGen.currentFile));
   }
@@ -79,7 +79,8 @@ extension ConstructorParameters on Constructor {
   Iterable<Parameter> get parameters =>
       requiredParameters.followedBy(optionalParameters);
   Iterable<Parameter> get positionalParameters => requiredParameters.followedBy(
-      optionalParameters.any((p) => p.named) ? [] : optionalParameters);
+        optionalParameters.any((p) => p.named) ? [] : optionalParameters,
+      );
   Iterable<Parameter> get namedParameters =>
       optionalParameters.any((p) => p.named) ? optionalParameters : [];
 }
@@ -90,9 +91,11 @@ extension ToMap<K, V> on Iterable<MapEntry<K, V>> {
 
 extension InvokeConstructor on Constructor {
   Expression invokeWith(
-      String className, Expression Function(Parameter p) toExpression) {
-    var posArgs = positionalParameters.map(toExpression);
-    var namedArgs =
+    String className,
+    Expression Function(Parameter p) toExpression,
+  ) {
+    final posArgs = positionalParameters.map(toExpression);
+    final namedArgs =
         namedParameters.map((p) => MapEntry(p.name, toExpression(p))).toMap();
     return name != null
         ? refer(className).newInstanceNamed(name!, posArgs, namedArgs)
@@ -102,9 +105,9 @@ extension InvokeConstructor on Constructor {
 
 /// Special type of expression to store an annotation object during runtime
 class ResolvedAnnotation<T> extends Expression {
+  ResolvedAnnotation(this.annotation, this.source);
   final String source;
   final T annotation;
-  ResolvedAnnotation(this.annotation, this.source);
 
   @override
   R accept<R>(covariant ExpressionVisitor<R> visitor, [R? context]) {
@@ -128,10 +131,9 @@ extension HasResolvedAnnotations on HasAnnotations {
 
 /// Special type of code to hold a resolved value during runtime
 class ResolvedValue<T> implements Code {
+  ResolvedValue(this.value, this.code);
   final T value;
   final String code;
-
-  ResolvedValue(this.value, this.code);
 
   @override
   R accept<R>(covariant CodeVisitor<R> visitor, [R? context]) {

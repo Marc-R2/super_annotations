@@ -10,13 +10,12 @@ part 'main.g.dart';
 
 @MyAnnotation()
 class MyClass {
-  @WrapGetter('data')
-  String _internal;
-
   MyClass(this._internal);
+  @WrapGetter('data')
+  final String _internal;
 }
 
 void main() {
-  var v = MyClass('hallo');
+  final v = MyClass('hallo');
   print(v.data); // prints: hallo
 }

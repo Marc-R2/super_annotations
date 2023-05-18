@@ -9,25 +9,28 @@ part 'main.g.dart';
 
 @DataClass()
 class Person with _$Person {
-  final String name;
-  final int age;
-
   Person(this.name, [this.age = 0]);
+  @override
+  final String name;
+  @override
+  final int age;
 }
 
 @DataClass()
 class Animal with _$Animal {
-  final String name;
-  final int height;
-  final bool isMammal;
-
   Animal(this.name, this.height, {this.isMammal = true});
+  @override
+  final String name;
+  @override
+  final int height;
+  @override
+  final bool isMammal;
 }
 
 void main() {
-  var p1 = Person('Tom', 32);
+  final p1 = Person('Tom', 32);
   print(p1); // prints: Person{name: Tom, age: 32}
 
-  var p2 = p1.copyWith(name: 'Alice');
+  final p2 = p1.copyWith(name: 'Alice');
   print(p2); // prints: Person{name: Alice, age: 32}
 }
